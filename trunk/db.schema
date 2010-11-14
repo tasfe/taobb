@@ -1,0 +1,5 @@
+CREATE TABLE 'urls' (
+`id` int(64) NOT NULL,
+`url` varchar(500) NOT NULL, gmt_modified DATETIME,
+PRIMARY KEY (`id`)
+);

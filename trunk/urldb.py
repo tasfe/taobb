@@ -11,5 +11,5 @@ def fromdb(i):
 	return url
 
 def todb(i, url):
-	c.execute("""replace into `urls` values (%d,'%s')""" % (i, url))
+	c.execute("""replace into `urls` values (%d,'%s',datetime())""" % (i, url))
 	conn.commit()
