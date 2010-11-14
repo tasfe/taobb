@@ -7,6 +7,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 from urlparse import parse_qs
 from urllib import unquote 
+import json
 
 from urlkeys import base62_encode as tokey
 from urlkeys import base62_decode as fromkey
@@ -26,28 +27,33 @@ class MyHandler(BaseHTTPRequestHandler):
 	def do_HEAD(self):
 		self.do_GET()
 
+	def do_POST(self):
+		self.do_GET()
+
 	def do_GET(self):
 		try:
 			path = self.path.lstrip(' /')
 			url = ''
-			
-			path = path.split('?')
+			key = ''
 			err = ''
+
+			path = path.split('?')
 
 			if len(path[0]) == 5:
 				url = urldb.fromdb(fromkey(path[0]))
 				if url:
 					self.send_response(302)
-					self.send_header('Location',url)
+					self.send_header('Location', url)
 					self.end_headers()
 					return
 
 			elif path[0] !='':
-				self.err()		
+				self.err()	
 			elif len(path) > 1 :
 				query = parse_qs(path[1])
 				if query.has_key('url'):
 					url = unquote(query['url'][0])
+					url = url
 					url = url_uni(url)
 					if url:
 						urldb.todb(hash(url), url)
@@ -60,16 +66,16 @@ class MyHandler(BaseHTTPRequestHandler):
 			self.send_response(200)
 			self.send_header('Content-type','text/html')
 			self.end_headers()
-			if not key:
-				url = ''
 
-			if len(url) == 5:
-				url = "http://tao.bb/" + url
+			if key != '' or err != '':
+				self.wfile.write(json.dumps({"key":key, "err":err}))
+			else:
+				self.wfile.write(html)
 
-			self.wfile.write(html)
 			return
-		except Exception:
-			self.err()		
+		except Exception as e:
+			print e
+			self.err()	
 
 
 
