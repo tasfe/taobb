@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>淘宝宝短域名</title>
+<link rel="icon" href="http://www.taobao.com/favicon.ico" type="image/x-icon">
+<script src="http://code.jquery.com/jquery-1.4.4.min.js" >
+</script>
+<script>
+(function($){
+	$(function(){	
+		var i = $("#urlinput");
+		var txt = "输入你想变短的 网址 如(http://www.taobao.com)";
+
+		var blurTimer;
+		i.focus(function(){
+			clearTimeout(blurTimer);
+			$(this).removeClass("blur");
+			if($(this).val() == txt){
+				$(this).val("");
+			}
+		});
+
+		i.blur(function(){
+			if($(this).val() == ""){
+				$(this).val(txt);
+				$(this).addClass("blur");
+			}
+		});
+		i.blur();
+
+		var o = $("#urloutput");
+		o.click(function(){
+			$(this).select();
+		});
+		
+		$("#work").click(function(){
+			$("#error").hide();
+			if(i.val() != txt){
+				$("#working").show("slow");
+				$(this).attr("disabled","disabled");
+				$.get("/",{url: i.val()},function(data){
+					try{
+						data = $.parseJSON(data); 
+					}catch(e){}
+					var key = data["key"];
+					var err = data["err"] ? data["err"] : "发生错误 请重试";
+					$("#error").text(err);
+					if(key){
+						i.animate({
+							width:"150px"
+						}, 
+						{
+							complete: function(){
+								o.val("http://tao.bb/" + key);
+								$("button").toggle();
+								$("input").toggle();
+								$("#working").hide();
+								$("#work").removeAttr("disabled");
+							}
+						});
+					}else{
+						$("#working").hide();
+						$("#error").show("fast");
+						$("#work").removeAttr("disabled");
+					}
+				});
+			}else{
+				blurTimer = setInterval(function(){i.toggleClass("blur");}, 100);
+				setTimeout(function(){clearTimeout(blurTimer);}, 1000);
+			}
+		});
+		$("#work").removeAttr("disabled");
+
+		$("#more").click(function(){
+			$(this).attr("disabled","disabled");
+			$("input").toggle();
+			i.animate({
+				width:"473px"
+			}, 
+			{
+				complete: function(){
+					$("button").toggle();
+					$("#more").removeAttr("disabled");
+				}
+			});
+		});
+	})
+})(jQuery);
+</script>
+</head>
+<body>
+
+<style>
+
+.inputbox{
+border:5px solid #FF7800;
+font:14px/18px verdana,tahoma,arial,宋体,sans-serif;
+height:14px;
+padding:7px 4px;
+vertical-align:middle;
+margin-top: 20px; margin-bottom: 20px;
+}
+
+.blur{
+color:#BABABA;
+}
+
+#urlinput {
+width:473px;
+}
+
+#urloutput {
+width:150px;
+}
+#body{
+text-align: center;
+margin-top: 100px;
+}
+
+</style>
+
+<div id="body">
+	<div>
+		<img src="http://www.phpsix.net/taobb.png" alt="tao.bb" >
+	</div>
+	<input id="urlinput" value="" autocomplete="off" autofocus="true" class="inputbox blur">
+	<input id="urloutput" value="" readonly="readonly" autocomplete="off" autofocus="true" class="inputbox" style="display:none"><br />
+	<button id="work">tao.bb</button><button id="more" style="display:none">more</button><br />
+	<p id="working" style="display:none">tao.bb ing ...</p>
+	<p id="error" style="color:red; display:none">发生错误 请重试</p>
+</div>
+
+</html>
