@@ -13,3 +13,4 @@ def fromdb(i):
 def todb(i, url):
 	c.execute("""replace into `urls` values (%d,'%s',datetime())""" % (i, url))
 	conn.commit()
+	return i

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 #coding: utf-8
 
-import string,cgi,time
-from os import curdir, sep
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 from urlparse import parse_qs
@@ -12,77 +10,63 @@ import json
 from urlkeys import base62_encode as tokey
 from urlkeys import base62_decode as fromkey
 from urluni import url_uni
-from hash import hash
-import urldb
+from urlhash import url_hash
+from urldb import todb as url_to_db
+from urldb import fromdb as url_from_db
 
 html = open('taobb.html').read()
 
-class MyHandler(BaseHTTPRequestHandler):
+class TaobbHandler(BaseHTTPRequestHandler):
 	
-	def err(self):
-		self.send_response(302)
-		self.send_header('Location','/')
-		self.end_headers()
-		
-	def do_HEAD(self):
-		self.do_GET()
-
-	def do_POST(self):
-		self.do_GET()
-
-	def do_GET(self):
+	def head(self):
 		try:
 			path = self.path.lstrip(' /')
-			url = ''
 			key = ''
 			err = ''
 
 			path = path.split('?')
 
-			if len(path[0]) == 5:
-				url = urldb.fromdb(fromkey(path[0]))
-				if url:
-					self.send_response(302)
-					self.send_header('Location', url)
-					self.end_headers()
-					return
-
-			elif path[0] !='':
-				self.err()	
-			elif len(path) > 1 :
-				query = parse_qs(path[1])
-				if query.has_key('url'):
-					url = unquote(query['url'][0])
-					url = url
-					url = url_uni(url)
-					if url:
-						urldb.todb(hash(url), url)
-						key = tokey(hash(url))
-					else:
-						err = '非法的URL'	
-			else:
-				pass
+			p = path[0].strip(' /')
+			if len(p) > 0:
+				return self.goto(url_from_db(fromkey(p)) or '/')	
 
 			self.send_response(200)
 			self.send_header('Content-type','text/html')
 			self.end_headers()
 
-			if key != '' or err != '':
-				self.wfile.write(json.dumps({"key":key, "err":err}))
-			else:
-				self.wfile.write(html)
+			if len(path) > 1 :
+				query = parse_qs(path[1])
+				if query.has_key('url'):
+					url = url_uni(unquote(query['url'][0]))
+					if url:
+						key = tokey(url_to_db(url_hash(url), url))
+					else:
+						err = '非法的URL'	
 
-			return
-		except Exception as e:
-			print e
-			self.err()	
+					return json.dumps({"key":key, "err":err});
 
+		except Exception:
+			return self.goto('/')	
+
+	def goto(self, url):
+		self.send_response(302)
+		self.send_header('Location', url)
+		self.end_headers()
+		
+	def do_HEAD(self):
+		self.head()
+
+	def do_POST(self):
+		self.do_GET()
+
+	def do_GET(self):
+		self.wfile.write(self.head() or html)
 
 
 def main():
 	try:
-		server = HTTPServer(('', 8008), MyHandler)
-		print 'ok...'
+		server = HTTPServer(('127.0.0.1', 8008), TaobbHandler)
+		print 'Tao.bb ok ...'
 		server.serve_forever()
 	except KeyboardInterrupt:
 		server.socket.close()
