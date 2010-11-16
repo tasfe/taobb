@@ -13,6 +13,7 @@ from urluni import url_uni
 from urlhash import url_hash
 from urldb import todb as url_to_db
 from urldb import fromdb as url_from_db
+from short_rewriter import real_url
 
 html = open('taobb.html').read()
 
@@ -39,7 +40,12 @@ class TaobbHandler(BaseHTTPRequestHandler):
 				if query.has_key('url'):
 					url = url_uni(unquote(query['url'][0]))
 					if url:
-						key = tokey(url_to_db(url_hash(url), url))
+						# 短路自己
+						if url.startswith('http://tao.bb'):
+							key = url[14:][:5] + ' '
+						else:
+							url = real_url(url)
+							key = tokey(url_to_db(url_hash(url), url))
 					else:
 						err = '非法的URL'	
 
