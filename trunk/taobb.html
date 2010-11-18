@@ -12,7 +12,7 @@
 		var i = $("#urlinput");
 		var txt = "输入你想变短的 网址 如(http://www.taobao.com)";
 
-		var blurTimer;
+		var blurTimer = false;
 		i.focus(function(){
 			clearTimeout(blurTimer);
 			$(this).removeClass("blur");
@@ -66,10 +66,14 @@
 					}
 				});
 			}else{
-				blurTimer = setInterval(function(){i.toggleClass("blur");}, 100);
-				setTimeout(function(){clearTimeout(blurTimer);
-					i.addClass("blur");
-				}, 1000);
+				if(!blurTimer){
+					blurTimer = setInterval(function(){i.toggleClass("blur");}, 100);
+					setTimeout(function(){
+						clearTimeout(blurTimer);
+						blurTimer = false;
+						i.addClass("blur");
+					}, 1000);
+				}
 			}
 		});
 		$("#work").removeAttr("disabled");
