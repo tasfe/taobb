@@ -7,6 +7,7 @@ from urlparse import parse_qs
 from urllib import unquote 
 import json
 
+import sys
 from urlkeys import base62_encode as tokey
 from urlkeys import base62_decode as fromkey
 from urluni import url_uni
@@ -15,7 +16,7 @@ from urldb import todb as url_to_db
 from urldb import fromdb as url_from_db
 from short_rewriter import real_url
 
-html = open('taobb.html').read()
+html = open(sys.path[0] + '/taobb.html').read()
 
 class TaobbHandler(BaseHTTPRequestHandler):
 	
