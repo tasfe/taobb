@@ -7,7 +7,6 @@ BLACK_LIST = (
 	'http://bit.ly',
 	'http://snipr.com',
 	'http://chilp.it',
-	'http://bit.ly',
 	'http://short.to',
 	'http://tr.im',
 	'http://twurl.nl',
@@ -38,11 +37,6 @@ BLACK_LIST = (
 	'http://snipurl.com',
 )
 
-
-class HeadRequest(urllib2.Request):
-	def get_method(self):
-		return "HEAD"
-
 def head(url):
 	""" from https://github.com/joshthecoder/shorty-python/blob/master/shorty.py """
 	class StopRedirectHandler(urllib2.HTTPRedirectHandler):
@@ -56,11 +50,15 @@ def head(url):
 	except urllib2.HTTPError as e:
 		if e.code == 301 or e.code == 302:
 			return e.headers['Location']
+	except:
+		pass
 	return url
 
 def real_url(url):
 	if url.startswith(BLACK_LIST):
-		return real_url(head(url))
-	else:
-		return url
+		url_head = head(url)
+		if url_head != url:
+			return real_url(url_head)
+
+	return url
 
