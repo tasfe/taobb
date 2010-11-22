@@ -1,6 +1,7 @@
 import sqlite3
+import sys
 
-conn = sqlite3.connect('url.db')
+conn = sqlite3.connect(sys.path[0] + '/url.db')
 c = conn.cursor()
 
 def fromdb(i):
