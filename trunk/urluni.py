@@ -3,6 +3,7 @@
 from urlparse import urlsplit
 from urlparse import parse_qsl
 from urllib import urlencode
+from urllib import quote
 import re
 
 httpre = re.compile("https?:\/\/", re.IGNORECASE)
@@ -55,4 +56,4 @@ def url_uni(url):
 
 	fragment = url.fragment
 
-	return ('%s://%s?%s#%s' % (scheme, path, query, fragment)).rstrip('?#/ ')
+	return (('%s://%s?%s#%s' % (scheme, quote(path), query, quote(fragment))).rstrip('?#/ '))
