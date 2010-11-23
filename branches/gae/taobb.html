@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>淘宝宝短网址</title>
+<link rel="icon" href="http://www.taobao.com/favicon.ico" type="image/x-icon">
+<script src="http://code.jquery.com/jquery-1.4.4.min.js" >
+</script>
+<script>
+(function($){
+	$(function(){	
+		var i = $("#urlinput");
+		var txt = "输入你想变短的 网址 如(http://www.taobao.com)";
+
+		var blurTimer = false;
+		i.focus(function(){
+			clearTimeout(blurTimer);
+			$(this).removeClass("blur");
+			if($(this).val() == txt){
+				$(this).val("");
+			}
+		});
+
+		i.blur(function(){
+			if($(this).val() == ""){
+				$(this).val(txt);
+				$(this).addClass("blur");
+			}
+		});
+		i.blur();
+
+		var o = $("#urloutput");
+		o.click(function(){
+			$(this).select();
+		});
+		
+		$("#work").click(function(){
+			$("#error").hide();
+			if(i.val() != txt){
+				$("#working").show("slow");
+				$(this).attr("disabled","disabled");
+				$.get("/",{url: i.val()},function(data){
+					try{
+						data = $.parseJSON(data); 
+					}catch(e){}
+					var key = data["key"];
+					var err = data["err"] ? data["err"] : "发生错误 请重试";
+					$("#error").text(err);
+					if(key){
+						i.animate({
+							width:"150px"
+						}, 
+						{
+							complete: function(){
+								o.val("http://tao.bb/" + key);
+								$("button").toggle();
+								$("input").toggle();
+								$("#working").hide();
+								$("#work").removeAttr("disabled");
+							}
+						});
+					}else{
+						$("#working").hide();
+						$("#error").show("fast");
+						$("#work").removeAttr("disabled");
+					}
+				});
+			}else{
+				if(!blurTimer){
+					blurTimer = setInterval(function(){i.toggleClass("blur");}, 100);
+					setTimeout(function(){
+						clearTimeout(blurTimer);
+						blurTimer = false;
+						i.addClass("blur");
+					}, 1000);
+				}
+			}
+		});
+		$("#work").removeAttr("disabled");
+
+		$("#more").click(function(){
+			$(this).attr("disabled","disabled");
+			$("input").toggle();
+			i.animate({
+				width:"473px"
+			}, 
+			{
+				complete: function(){
+					$("button").toggle();
+					$("#more").removeAttr("disabled");
+				}
+			});
+		});
+	})
+})(jQuery);
+</script>
+</head>
+<body>
+
+<style>
+
+.inputbox{
+border:5px solid #FF7800;
+font:14px/18px verdana,tahoma,arial,宋体,sans-serif;
+height:14px;
+padding:7px 4px;
+vertical-align:middle;
+margin-top: 20px; margin-bottom: 20px;
+}
+
+.blur{
+color:#BABABA;
+}
+
+#urlinput {
+width:473px;
+}
+
+#urloutput {
+width:150px;
+}
+#body{
+text-align: center;
+margin-top: 100px;
+}
+
+#footer{
+text-align: center;
+margin-top: 100px;
+}
+
+button {
+background:url("http://img05.taobaocdn.com/tps/i5/T1nAlrXohtXXXXXXXX-300-389.png") no-repeat scroll 0 -149px transparent;
+border:medium none;
+color:#FFFFFF;
+cursor:pointer;
+font-size:14px;
+font-weight:700;
+height:30px;
+width:93px;
+}
+</style>
+
+<div id="body">
+	<div>
+		<img src="http://www.phpsix.net/taobb.png" alt="tao.bb" >
+	</div>
+	<input id="urlinput" value="" autocomplete="off" autofocus="true" class="inputbox blur" alt="" />
+	<input id="urloutput" value="" readonly="readonly" autocomplete="off" autofocus="true" class="inputbox" style="display:none" alt=""/><br />
+	<button id="work">tao.bb</button><button id="more" style="display:none">再来一个</button><br />
+	<p id="working" style="display:none">tao.bb ing ...</p>
+	<p id="error" style="color:red; display:none">发生错误 请重试</p>
+
+</div>
+<div id="footer">
+<span><a href="http://tao.bb/Y06rW" target="_blank">获取源代码</a></span> | <span><a href="mailto:farmer1992@gmail.com" >联系作者</a></span>
+</div>
+</body>
+</html>
