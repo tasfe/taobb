@@ -46,7 +46,7 @@ def popath(path):
 
 def url_uni(url):
 	url = url.replace('\t', '').replace('\r', '').replace('\n', '')
-	#url = escape(url.strip())
+	url = url.strip()
 	testurl = urlsplit(url)
 	if not testurl.scheme in ['http','https']:
 		url = urlsplit('http://' + url)
