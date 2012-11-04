@@ -2,7 +2,7 @@
 #coding: utf-8
 # vim :set ts=4 sw=4 sts=4 et :
 
-from bottle import route, run, static_file, request ,abort, redirect
+from bottle import route, run, static_file, request ,abort, redirect, response
 from bottle_sqlite import SQLitePlugin
 
 from sqlite3 import OperationalError
@@ -10,6 +10,10 @@ from sqlite3 import OperationalError
 from base62 import base62_encode, base62_decode
 from hashlib import md5
 from url_uniq import url_uniq
+
+from qrcode import make as makeqrcode
+from StringIO import StringIO
+
 
 #MAX = 62 ** 5
 MAX = 916132832
@@ -27,22 +31,52 @@ def index():
 
 @route('/favicon.ico')
 def notfound():
-    abort(404, "NOT FOUND")
+    redirect('http://www.taobao.com/favicon.ico', 302)
+
+def realurl(key, db):
+    try:
+        code = base62_decode(key)
+        c = db.execute("SELECT `url` FROM `urls` WHERE id = ?", ( code, ))
+        row = c.fetchone()
+        if row:
+	    return row['url']
+    except:
+        pass
+	
 
 @route('/<key>', apply=[sqlite_plugin])
 def url(key, db):
     if len(request.query) == 0 and len(key) == 5:
-        try:
-            code = base62_decode(key)
-	    c = db.execute("SELECT `url` FROM `urls` WHERE id = ?", ( code, ))
-	    row = c.fetchone()
-	    if row:
-	        redirect(row['url'])
-	except:
-	    pass
+        url = realurl(key, db)
+	if url:
+	    redirect(url)
 
     redirect('/')
 
+
+@route('/<key>/real', apply=[sqlite_plugin])
+def qrcode(key, db):
+    if len(request.query) == 0 and len(key) == 5:
+        url = realurl(key, db)
+	if url:
+	    return url
+
+    abort(404, "NOT FOUND")
+
+@route('/<key>/qrcode', apply=[sqlite_plugin])
+def qrcode(key, db):
+    if len(request.query) == 0 and len(key) == 5:
+        url = realurl(key, db)
+	if url:
+	    response.content_type = 'image/png'
+	    img = makeqrcode(url)
+	    output = StringIO()
+	    img.save(output,'PNG')
+	    contents = output.getvalue()
+	    output.close()
+	    return contents
+	
+    abort(404, "NOT FOUND")
 
 @route('/d/save', method='POST', apply=[sqlite_plugin])
 def action(db):
