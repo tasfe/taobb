@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>淘宝宝短网址</title>
 <link rel="icon" href="http://www.taobao.com/favicon.ico" type="image/x-icon">
-<script src="http://code.jquery.com/jquery-1.4.4.min.js" >
+<script src="http://lib.sinaapp.com/js/jquery/1.8/jquery.min.js" >
 </script>
 <script>
 (function($){
@@ -39,10 +39,8 @@
 			if(i.val() != txt){
 				$("#working").show("slow");
 				$(this).attr("disabled","disabled");
-				$.get("/",{url: i.val()},function(data){
-					try{
-						data = $.parseJSON(data); 
-					}catch(e){}
+				$.post("/d/save",{url: i.val()})
+				.success(function(data){
 					var key = data["key"];
 					var err = data["err"] ? data["err"] : "发生错误 请重试";
 					$("#error").text(err);
@@ -55,16 +53,22 @@
 								o.val("http://tao.bb/" + key);
 								$("button").toggle();
 								$("input").toggle();
-								$("#working").hide();
-								$("#work").removeAttr("disabled");
 							}
 						});
 					}else{
-						$("#working").hide();
 						$("#error").show("fast");
-						$("#work").removeAttr("disabled");
 					}
+				})
+				.error(function(){
+					$("#error").text("网络错误");
+					$("#error").show("fast");
+				})
+				.complete(function() {
+					$("#working").hide();
+					$("#work").removeAttr("disabled");
+					
 				});
+				;
 			}else{
 				if(!blurTimer){
 					blurTimer = setInterval(function(){i.toggleClass("blur");}, 100);
