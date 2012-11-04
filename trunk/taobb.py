@@ -1,83 +1,73 @@
 #!/usr/bin/env python
 #coding: utf-8
+# vim :set ts=4 sw=4 sts=4 et :
 
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from bottle import route, run, static_file, request ,abort, redirect
+from bottle_sqlite import SQLitePlugin
 
-from urlparse import parse_qs
-from urllib import unquote 
-import json
+from sqlite3 import OperationalError
 
-import sys
-from urlkeys import base62_encode as tokey
-from urlkeys import base62_decode as fromkey
-from urluni import url_uni
-from urlhash import url_hash
-from urldb import todb as url_to_db
-from urldb import fromdb as url_from_db
-from short_rewriter import real_url
+from base62 import base62_encode, base62_decode
+from hashlib import md5
+from url_uniq import url_uniq
 
-html = open(sys.path[0] + '/taobb.html').read()
+#MAX = 62 ** 5
+MAX = 916132832
 
-class TaobbHandler(BaseHTTPRequestHandler):
-	
-	def head(self):
-		try:
-			path = self.path.lstrip(' /')
-			key = ''
-			err = ''
+def hashto62(url):
+	m = md5()
+	m.update(url)
+	return int(m.hexdigest(), 16) % MAX
 
-			path = path.split('?')
+sqlite_plugin = SQLitePlugin(dbfile='url.db')
 
-			p = path[0].strip(' /')
-			if len(p) > 0:
-				return self.goto(url_from_db(fromkey(p)) or '/')	
+@route('/')
+def index():
+    return static_file('taobb.html', root='.')
 
-			self.send_response(200)
-			self.send_header('Content-type','text/html')
-			self.end_headers()
+@route('/favicon.ico')
+def notfound():
+    abort(404, "NOT FOUND")
 
-			if len(path) > 1 :
-				query = parse_qs(path[1])
-				if query.has_key('url'):
-					url = url_uni(unquote(query['url'][0]))
-					if url:
-						# 短路自己
-						if url.startswith('http://tao.bb'):
-							key = url[14:][:5] + ' '
-						else:
-							url = real_url(url)
-							key = tokey(url_to_db(url_hash(url), url))
-					else:
-						err = '非法的URL'	
+@route('/<key>', apply=[sqlite_plugin])
+def url(key, db):
+    if len(request.query) == 0:
+        code = base62_decode(key)
+        try:
+	    c = db.execute("SELECT `url` FROM `urls` WHERE id = ?", ( code, ))
+	    row = c.fetchone()
+	    if row:
+	        redirect(row['url'])
+	except OperationalError:
+	    pass
 
-					return json.dumps({"key":key, "err":err});
-
-		except Exception:
-			return self.goto('/')	
-
-	def goto(self, url):
-		self.send_response(302)
-		self.send_header('Location', url)
-		self.end_headers()
-		
-	def do_HEAD(self):
-		self.head()
-
-	def do_POST(self):
-		self.do_GET()
-
-	def do_GET(self):
-		self.wfile.write(self.head() or html)
+    redirect('/')
 
 
-def main():
-	try:
-		server = HTTPServer(('127.0.0.1', 8008), TaobbHandler)
-		print 'Tao.bb ok ...'
-		server.serve_forever()
-	except KeyboardInterrupt:
-		server.socket.close()
+@route('/d/save', method='POST', apply=[sqlite_plugin])
+def action(db):
+    key = None
+    err = None
+
+    url = request.forms['url']
+    if url:
+        url = url_uniq(url)
+        if url:
+	    code = hashto62(url)
+	    try:
+	        db.execute("REPLACE INTO `urls` VALUES (?, ?,datetime())" , (code, url))
+		key = base62_encode(code)
+	    except OperationalError:
+	        err = '内部错误'
+        else:
+	    err = '请输入有效的 URL'
+
+    else:
+        err = '请输入URL'
+
+    return {'key':key, 'err':err }
+
+
 
 if __name__ == '__main__':
-	main()
-
+    run(host='localhost', port=8008, debug=True)
