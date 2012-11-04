@@ -31,8 +31,8 @@ def notfound():
 
 @route('/<key>', apply=[sqlite_plugin])
 def url(key, db):
-    if len(request.query) == 0:
-        code = base62_decode(key)
+    if len(request.query) == 0 and len(key) >= 5:
+        code = base62_decode(key[:5])
         try:
 	    c = db.execute("SELECT `url` FROM `urls` WHERE id = ?", ( code, ))
 	    row = c.fetchone()
@@ -67,7 +67,5 @@ def action(db):
 
     return {'key':key, 'err':err }
 
-
-
 if __name__ == '__main__':
-    run(host='localhost', port=8008, debug=True)
+    run(host='localhost', port=8008)
