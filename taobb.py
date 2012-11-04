@@ -31,14 +31,14 @@ def notfound():
 
 @route('/<key>', apply=[sqlite_plugin])
 def url(key, db):
-    if len(request.query) == 0 and len(key) >= 5:
-        code = base62_decode(key[:5])
+    if len(request.query) == 0 and len(key) == 5:
         try:
+            code = base62_decode(key)
 	    c = db.execute("SELECT `url` FROM `urls` WHERE id = ?", ( code, ))
 	    row = c.fetchone()
 	    if row:
 	        redirect(row['url'])
-	except OperationalError:
+	except:
 	    pass
 
     redirect('/')
