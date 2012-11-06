@@ -2,7 +2,8 @@
 #coding: utf-8
 # vim :set ts=4 sw=4 sts=4 et :
 
-from bottle import route, run, static_file, request ,abort, redirect, response
+import sys
+from bottle import route, run, static_file, request ,abort, redirect, response, error
 from bottle_sqlite import SQLitePlugin
 
 from sqlite3 import OperationalError
@@ -25,8 +26,9 @@ def hashto62(url):
 
 sqlite_plugin = SQLitePlugin(dbfile='url.db')
 
+@error(404)
 @route('/')
-def index():
+def index(error = None):
     return static_file('taobb.html', root='.')
 
 @route('/favicon.ico')
@@ -46,12 +48,14 @@ def realurl(key, db):
 
 @route('/<key>', apply=[sqlite_plugin])
 def url(key, db):
+    key = key.strip('/')
+    print key
     if len(request.query) == 0 and len(key) == 5:
         url = realurl(key, db)
 	if url:
 	    redirect(url)
 
-    redirect('/')
+    abort(404, "NOT FOUND")
 
 
 @route('/<key>/real', apply=[sqlite_plugin])
@@ -59,11 +63,12 @@ def qrcode(key, db):
     if len(request.query) == 0 and len(key) == 5:
         url = realurl(key, db)
 	if url:
-	    return url
+	    return url + "\n"
 
     abort(404, "NOT FOUND")
 
 @route('/<key>/qrcode', apply=[sqlite_plugin])
+@route('/<key>/qrcode.png', apply=[sqlite_plugin])
 def qrcode(key, db):
     if len(request.query) == 0 and len(key) == 5:
         url = realurl(key, db)
@@ -102,4 +107,7 @@ def action(db):
     return {'key':key, 'err':err }
 
 if __name__ == '__main__':
-    run(host='localhost', port=8008)
+    debug = False
+    if len(sys.argv) > 0:
+        debug = True
+    run(host='localhost', port=8008, debug=debug)
