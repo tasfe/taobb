@@ -95,6 +95,14 @@
 				}
 			});
 		});
+
+		(function(){
+			var wanted = location.pathname.replace( /^\/+|\/+$/g, '' );
+			if (wanted){
+				$("#error").text('您访问的网址：1.不存在 2.不安全(如钓鱼) 3.传播禁止的内容 而无法访问 ').show();
+			}
+		})();
+
 	})
 })(jQuery);
 </script>
