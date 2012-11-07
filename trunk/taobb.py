@@ -49,7 +49,6 @@ def realurl(key, db):
 @route('/<key>', apply=[sqlite_plugin])
 def url(key, db):
     key = key.strip('/')
-    print key
     if len(request.query) == 0 and len(key) == 5:
         url = realurl(key, db)
 	if url:
