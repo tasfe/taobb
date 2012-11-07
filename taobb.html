@@ -30,6 +30,35 @@
 		});
 		i.blur();
 
+		var expandtimer = false;
+		i.keydown(function(){
+			clearTimeout(expandtimer);
+			
+			expandtimer = setTimeout(function(){
+				$("#working").show("slow");
+				$("#longurl").hide();
+				$.post("/d/long",{url: $.trim(i.val())})
+				.success(function(data){
+					var longurl = data["long"];
+					var wanted = data["wanted"];
+					if(longurl && $.trim(i.val()) == wanted){
+						var _longurl = $("#longurl");
+						var a = $('<a href="javascript:;">点我展开短网址 <em>'+ wanted + '</em></a>');
+						a.click(function(){ i.val(longurl);});
+						_longurl.children().remove();
+						_longurl.append(a);
+						_longurl.show('fast');
+					}
+				})
+				.error(function(){
+				})
+				.complete(function() {
+					$("#working").hide();
+				});
+				;
+			}, 800);
+		});
+
 		var o = $("#urloutput");
 		o.click(function(){
 			$(this).select();
@@ -37,6 +66,7 @@
 		
 		$("#work").click(function(){
 			$("#error").hide();
+			$("#longurl").hide();
 			if(i.val() != txt){
 				$("#working").show("slow");
 				$(this).attr("disabled","disabled");
@@ -104,6 +134,20 @@
 			}
 		})();
 
+		$("#favorite").click(function(){
+			var url = window.location;
+			var title = document.title;
+			try {
+				if (window.sidebar) {
+					window.sidebar.addPanel(title, url, "");
+				} else {
+					window.external.addFavorite(url, title);
+				}
+			} catch(b) {
+				alert('您的浏览器不支持自动收藏，请按 Ctrl+D 手动收藏！');
+			}
+		});
+
 	})
 })(jQuery);
 </script>
@@ -161,13 +205,18 @@ width:93px;
 	<input id="urlinput" value="" autocomplete="off" autofocus="true" class="inputbox blur" alt="" />
 	<input id="urloutput" value="" readonly="readonly" autocomplete="off" autofocus="true" class="inputbox" style="display:none" alt=""/><br />
 	<button id="work">tao.bb</button><button id="more" style="display:none">再来一个</button><br />
-	<p id="working" style="display:none">tao.bb ing ...</p>
+	<p id="working" style="display:none"><img src="http://img01.taobaocdn.com/tps/i1/T1cKm3XkRpXXXXXXXX-48-48.gif" alt="loading" /></p>
 	<p id="error" style="color:red; display:none">发生错误 请重试</p>
+	<p id="longurl" style="display:none"></p>
+	<div id="qrcode" style="margin-top: 20px;display:none"><img src="" style="width:120px;height:120px"/></div>
 
 </div>
 <div id="footer">
 <span><a href="http://tao.bb/Y06rW" target="_blank">获取源代码</a></span> | <span><a href="mailto:farmer1992@gmail.com" >联系作者</a></span>
 </div>
+<div id="favorite" style="cursor:pointer; background:url(http://img02.taobaocdn.com/tps/i2/T1T.ekXkxXXXXXXXXX-32-90.png);width:32px;height:90px;position:fixed; _position:absolute; right:5px; top:150px; _bottom:auto;  _top:expression((documentElement.scrollTop+150)+'px');">	
+</div>
+
 </body>
 <script type="text/javascript">
 

@@ -14,7 +14,7 @@ from url_uniq import url_uniq
 
 from qrcode import make as makeqrcode
 from StringIO import StringIO
-
+from short_rewriter import real_url
 
 #MAX = 62 ** 5
 MAX = 916132832
@@ -83,7 +83,7 @@ def qrcode(key, db):
     abort(404, "NOT FOUND")
 
 @route('/d/save', method='POST', apply=[sqlite_plugin])
-def action(db):
+def save(db):
     key = None
     err = None
 
@@ -104,6 +104,18 @@ def action(db):
         err = '请输入URL'
 
     return {'key':key, 'err':err }
+
+@route('/d/long', method='POST')
+def longurl():
+    wanted = request.forms['url']
+    longurl = None
+    if wanted and len(wanted) < 25:
+        if not wanted.startswith('http://'):
+	    wanted = 'http://' + wanted
+	
+	longurl = real_url(wanted)
+
+    return { 'wanted':wanted,  'long': longurl}
 
 if __name__ == '__main__':
     debug = False
