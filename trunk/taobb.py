@@ -48,6 +48,9 @@ def realurl(key, db):
 
 @route('/<key>', apply=[sqlite_plugin])
 def url(key, db):
+    if request.get_header('Host' , 'tao.bb') != 'tao.bb':
+	abort(404, "NOT FOUND")
+
     key = key.strip('/')
     if len(request.query) == 0 and len(key) == 5:
         url = realurl(key, db)
@@ -113,7 +116,7 @@ def longurl():
         if not wanted.startswith('http://'):
 	    wanted = 'http://' + wanted
 	
-	longurl = real_url(wanted)
+	#longurl = real_url(wanted)
 
     return { 'wanted':wanted,  'long': longurl}
 
